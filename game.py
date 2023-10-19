@@ -72,14 +72,35 @@ def check_result(user_data, image_to_check):
 
     print(board)
 
-    check_scenario(user_data, row, column)
+    check_row()
 
-def check_scenario(user_data, row, column):
-    print(user_data)
-    if user_data == "11":
-        print("yey2")
-        if board[row][column] == board[row][column + 1] and board[row][column] == board[row][column + 2]:
-            print("yey")
+def check_row():
+    game = "on"
+    while game == "on":
+        for row in range(0, 3):
+            if board[row][0] == board[row][1] and board[row][0] == board[row][2] and sum(board[row]) != 27:
+                print("win1")
+                game = "off"
+                break               
+
+        for column in range(0, 3):
+            if board[0][column] == board[1][column] and board[0][column] == board[2][column] and sum(board[column]) != 27:
+                print("win2")
+                game = "off"
+                break
+
+        if board[0][0] == board [1][1] and board[0][0] == board[2][2] and board[0][0] + board[1][1] + board[2][2] != 27:
+            print("win3")
+            game = "off"
+
+        if board[2][0] == board [1][1] and board[2][0] == board[0][2] and board[2][0] + board[1][1] + board[0][2] != 27:
+            print("win4")
+            game = "off"
+
+        game = "off"
+
+
+    print("the end")
 
 dpg.create_context()
 
