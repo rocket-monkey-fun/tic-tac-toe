@@ -7,7 +7,8 @@ player_2_selected_icon = []
 player_2_name = []
 
 game_step = [0]
-board = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
+board_row = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
+board_column = [[9, 9, 9], [9, 9, 9], [9, 9, 9]]
 
 def player_name(sender, app_data):
     if sender == "player_1_name":
@@ -53,54 +54,89 @@ def change_texture(sender, app_data, user_data):
     if game_step[0] % 2 != 0:
         dpg.configure_item(sender, texture_tag = player_1_selected_icon[0], enabled = False)
         dpg.set_value("hint_text", value = f"Player 2 ({player_2_name[0]}) to play...")
-        check_result(user_data, image_to_check = player_1_selected_icon[0])
+        check_result(user_data, image_to_check = player_1_selected_icon[0], player = 1, playername = player_1_name[0])
     if game_step[0] % 2 == 0:
         dpg.configure_item(sender, texture_tag = player_2_selected_icon[0], enabled = False)
         dpg.set_value("hint_text", value = f"Player 1 ({player_1_name[0]}) to play...")
-        check_result(user_data, image_to_check = player_2_selected_icon[0])
+        check_result(user_data, image_to_check = player_2_selected_icon[0], player = 2, playername = player_2_name[0])
         
-def check_result(user_data, image_to_check):
+def check_result(user_data, image_to_check, player, playername):
     row = int(user_data[0]) - 1
     column = int(user_data[1]) - 1
 
-    board[row].pop((column))
+    board_row[row].pop((column))
+    board_column[column].pop((row))
 
     if image_to_check == "image_o":
-        board[row].insert(column, 0)
+        board_row[row].insert(column, 0)
+        board_column[column].insert(row, 0)
     if image_to_check == "image_x":
-        board[row].insert(column, 1)
+        board_row[row].insert(column, 1)
+        board_column[column].insert(row, 1)
 
-    print(board)
+    print(board_row)
+    print(board_column)
 
-    check_row()
+    check_row(player, playername)
 
-def check_row():
+def check_row(player, playername):
     game = "on"
     while game == "on":
         for row in range(0, 3):
-            if board[row][0] == board[row][1] and board[row][0] == board[row][2] and sum(board[row]) != 27:
+            if board_row[row][0] == board_row[row][1] and board_row[row][0] == board_row[row][2] and sum(board_row[row]) != 27:
                 print("win1")
                 game = "off"
+                the_end(player, playername)
                 break               
 
         for column in range(0, 3):
-            if board[0][column] == board[1][column] and board[0][column] == board[2][column] and sum(board[column]) != 27:
+            if board_column[column][0] == board_column[column][1] and board_column[column][0] == board_column[column][2] and sum(board_column[column]) != 27:
                 print("win2")
                 game = "off"
-                break
+                the_end(player, playername)
+                break 
 
-        if board[0][0] == board [1][1] and board[0][0] == board[2][2] and board[0][0] + board[1][1] + board[2][2] != 27:
+        if board_row[0][0] == board_row[1][1] and board_row[0][0] == board_row[2][2] and board_row[0][0] + board_row[1][1] + board_row[2][2] != 27:
             print("win3")
             game = "off"
+            the_end(player, playername)
 
-        if board[2][0] == board [1][1] and board[2][0] == board[0][2] and board[2][0] + board[1][1] + board[0][2] != 27:
+        if board_row[2][0] == board_row[1][1] and board_row[2][0] == board_row[0][2] and board_row[2][0] + board_row[1][1] + board_row[0][2] != 27:
             print("win4")
             game = "off"
+            the_end(player, playername)
 
         game = "off"
 
+    if game_step[0] == 9:
+        the_end(player, playername)
 
-    print("the end")
+def the_end(player, playername):
+    for row in range(1, 4):
+        for column in range(1, 4):
+            dpg.configure_item(f"button{row}_{column}", enabled = False)
+    
+    dpg.set_value("hint_text", value = "The end!")
+
+    if game_step[0] != 9:
+        dpg.set_value("winner", value = f"Player {player} ({playername}) wins!")
+
+    if game_step[0] == 9:
+        dpg.set_value("winner", value = f"You both loose!")
+
+    dpg.configure_item("the_end_popup", show = True)
+    dpg.configure_item("new_game_button", show = True)
+
+def new_game():
+    for row in range(1, 4):
+        for column in range(1, 4):
+
+            dpg.configure_item(f"button{row}_{column}", texture_tag = "image_blank", enabled = True)
+
+    game_step.clear()
+    game_step.append(0)
+
+####################################################################################################################################################################################    
 
 dpg.create_context()
 
@@ -114,7 +150,6 @@ with dpg.texture_registry():
     dpg.add_static_texture(width = width_blank, height = height_blank, default_value = data_blank, tag = "image_blank")
 
 dpg.create_viewport(title = 'Tic-Tac-Toe', width = 600, height = 600, small_icon = "icon.ico", large_icon = "icon.ico", resizable = True)
-
 
 with dpg.window(label = "Welcome screen", pos = (100, 100), show = True, tag = "welcome_screen"):
     with dpg.tree_node(label = "Player 1:", default_open = True, bullet = True, leaf = True):
@@ -139,7 +174,7 @@ with dpg.window(label = "Welcome screen", pos = (100, 100), show = True, tag = "
             dpg.add_theme_color(dpg.mvThemeCol_ButtonActive, colors.retro_blue_dark)
             dpg.add_theme_color(dpg.mvThemeCol_ButtonHovered, colors.retro_blue_light)
             dpg.add_theme_style(dpg.mvStyleVar_FrameRounding, 40)
-            dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 40, 20)
+            dpg.add_theme_style(dpg.mvStyleVar_FramePadding, 40, 10)
 
     dpg.add_button(label = "Start game", callback = start_game, tag = "start_game_button")
     dpg.bind_item_theme(dpg.last_item(), "button_theme")
@@ -151,8 +186,14 @@ with dpg.window(label = "Game screen", pos = (100, 100), show = False, tag = "ga
                 dpg.add_image_button("image_blank", width = 150, height = 150, callback = change_texture, user_data = f"{row}{column}", tag = f"button{row}_{column}")
     dpg.add_text("Player to play...", tag = "hint_text")
 
+    dpg.add_button(label = "New game", show = False, callback = new_game, tag = "new_game_button")
+    dpg.bind_item_theme(dpg.last_item(), "button_theme")
+
 with dpg.window(label = "Wait!", popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "start_game_popup"):
     dpg.add_text("Please enter usernames and select icons.", pos = (10, 40))
+
+with dpg.window(label = "The end!", popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "the_end_popup"):
+    dpg.add_text(f"Player wins!", pos = (10, 40), tag = "winner")
 
 dpg.setup_dearpygui()
 dpg.show_viewport()
