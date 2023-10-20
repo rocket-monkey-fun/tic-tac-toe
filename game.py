@@ -156,8 +156,32 @@ def new_game():
                 board_column[i].pop(0)
                 board_column[i].append(9)
 
+    dpg.set_value("hint_text", value = f"Player 1 ({player_1_name[0]}) to play...")
+
     game_step.clear()
     game_step.append(0)
+
+def reset_game():
+    new_game()
+    player_1_selected_icon.clear()
+    player_1_name.clear()
+    player_1_score_value.clear
+    player_1_score_value.append(0)
+
+    player_2_selected_icon.clear()
+    player_2_name.clear()
+    player_2_score_value.clear()
+    player_2_score_value.append(0)
+
+    dpg.configure_item("welcome_screen", show = True)
+    dpg.configure_item("game_screen", show = False)
+    dpg.set_primary_window("welcome_screen", True)
+    dpg.set_value("player_1_name", value = "")
+    dpg.set_value("player_2_name", value = "")
+    dpg.configure_item("player_1_icon_o", background_color = (0, 0, 0, 0))
+    dpg.configure_item("player_1_icon_x", background_color = (0, 0, 0, 0))
+    dpg.configure_item("player_2_icon_o", show = False, background_color = (0, 0, 0, 0))
+    dpg.configure_item("player_2_icon_x", show = False, background_color = (0, 0, 0, 0))
 
 ####################################################################################################################################################################################    
 
@@ -172,7 +196,7 @@ with dpg.texture_registry():
     dpg.add_static_texture(width = width_o, height = height_o, default_value = data_o, tag = "image_o")
     dpg.add_static_texture(width = width_blank, height = height_blank, default_value = data_blank, tag = "image_blank")
 
-dpg.create_viewport(title = 'Tic-Tac-Toe', width = 550, height = 675, small_icon = "icon.ico", large_icon = "icon.ico", resizable = True)
+dpg.create_viewport(title = 'Tic-Tac-Toe', width = 550, height = 675, small_icon = "icon.ico", large_icon = "icon.ico", resizable = False)
 
 with dpg.window(label = "Welcome screen", pos = (100, 100), show = True, tag = "welcome_screen"):
     with dpg.tree_node(label = "Player 1:", default_open = True, bullet = True, leaf = True):
@@ -209,8 +233,11 @@ with dpg.window(label = "Game screen", pos = (100, 100), show = False, tag = "ga
                 dpg.add_image_button("image_blank", width = 150, height = 150, callback = change_texture, user_data = f"{row}{column}", tag = f"button{row}_{column}")
     dpg.add_text("Player to play...", tag = "hint_text")
 
-    dpg.add_button(label = "New game", callback = new_game, tag = "new_game_button")
-    dpg.bind_item_theme(dpg.last_item(), "button_theme")
+    with dpg.group(horizontal = True):
+        dpg.add_button(label = "New game", callback = new_game, tag = "new_game_button")
+        dpg.bind_item_theme(dpg.last_item(), "button_theme")
+        dpg.add_button(label = "Reset game", callback = reset_game, tag = "reset_game_button")
+        dpg.bind_item_theme(dpg.last_item(), "button_theme")
 
     with dpg.tree_node(label = "Score:", default_open = True, bullet = True, leaf = True):
         with dpg.group(horizontal = True):
@@ -220,11 +247,13 @@ with dpg.window(label = "Game screen", pos = (100, 100), show = False, tag = "ga
             dpg.add_text("Player 2:", tag = "player_2_score")
             dpg.add_text("0", tag = "player_2_score_value")
 
-with dpg.window(label = "Wait!", popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "start_game_popup"):
+with dpg.window(label = "Wait!", no_resize = True, popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "start_game_popup"):
     dpg.add_text("Please enter usernames and select icons.", pos = (10, 40))
 
-with dpg.window(label = "The end!", popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "the_end_popup"):
-    dpg.add_text(f"Player wins!", pos = (10, 40), tag = "winner")
+with dpg.window(label = "The end!", autosize=True, no_resize = True, modal = True, popup = True, show = False, no_title_bar = True, pos = (100, 100), tag = "the_end_popup"):
+    dpg.add_text(f"Player wins!", tag = "winner")
+    dpg.add_button(label = "Close", callback = lambda: dpg.configure_item("the_end_popup", show = False), tag = "close_button")
+    dpg.bind_item_theme(dpg.last_item(), "button_theme")
 
 dpg.setup_dearpygui()
 dpg.show_viewport()
